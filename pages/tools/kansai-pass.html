@@ -1,0 +1,196 @@
+<!-- title: Kansai Pass Calculator 2026: Is the Kansai Area Pass worth it? | description: Plan your days in Osaka, Kyoto, Nara, Kobe and Himeji and see whether the WEST QR Kansai Area Pass, JR West 2day Pass, a Kintetsu pass or an IC card is cheapest. Fares checked on official pages. | path: tools/kansai-pass.html -->
+<style>
+.calc{display:grid;grid-template-columns:minmax(0,1fr);gap:20px}
+@media (min-width:900px){.calc{grid-template-columns:minmax(0,5fr) minmax(0,6fr);align-items:start}}
+.panel{background:var(--board);border:1px solid var(--rule);border-radius:4px;padding:18px;display:flex;flex-direction:column;gap:14px;min-width:0}
+.field{display:flex;flex-direction:column;gap:4px}
+.field label,.legend{font-weight:600;font-size:15px}
+.hint{font-size:13px;color:var(--muted)}
+.seg{display:flex;gap:0;border:1px solid var(--line);border-radius:4px;overflow:hidden;width:fit-content}
+.seg button{border:0;border-radius:0;background:transparent;color:var(--line);min-height:40px}
+.seg button[aria-pressed="true"]{background:var(--line);color:#fff}
+.days{display:flex;flex-direction:column;gap:8px}
+.day{display:grid;grid-template-columns:72px minmax(0,1fr);gap:8px;align-items:center}
+.day b{font-family:var(--display);font-size:15px}
+.day small{display:block;font-size:12px;color:var(--muted);font-weight:400}
+.day select{width:100%;min-width:0}
+.checks{display:flex;flex-direction:column;gap:8px}
+.checks label{display:flex;gap:10px;align-items:flex-start;font-size:15px}
+.checks input{min-height:auto;margin-top:4px;width:18px;height:18px}
+.row2{display:grid;grid-template-columns:1fr 1fr;gap:10px}
+.row2 input{width:100%}
+.verdict{border-top:8px solid var(--good)}
+.verdict .big{font-family:var(--display);font-size:clamp(26px,4vw,34px);font-weight:700;line-height:1.2}
+.save{color:var(--good);font-weight:600}
+td.y{text-align:right;font-family:var(--mono);font-variant-numeric:tabular-nums;white-space:nowrap}
+tr.best td{font-weight:600}
+.daybox{border-top:1px solid var(--rule);padding-top:10px;display:flex;flex-direction:column;gap:4px}
+.daybox h4{margin:0;font-family:var(--display);font-size:16px}
+.line{display:flex;justify-content:space-between;gap:12px;font-size:14px}
+.line span:first-child{min-width:0}
+.line .covered{color:var(--good)}
+.passcard{border:1px solid var(--rule);border-left:4px solid var(--line);border-radius:4px;padding:10px 12px;font-size:14px;display:flex;flex-direction:column;gap:4px}
+.changes{list-style:none;margin:0;padding:0;display:flex;flex-direction:column;gap:10px}
+.changes li{background:var(--board);border:1px solid var(--rule);border-left:4px solid var(--line-2);border-radius:4px;padding:10px 12px;font-size:15px}
+.changes b{font-family:var(--display)}
+.st{font-size:12px;border-radius:999px;padding:1px 8px;border:1px solid var(--rule);white-space:nowrap}
+.st.verified{color:var(--good);border-color:var(--good)}
+</style>
+
+<header class="stack" style="gap:10px">
+  <h1>Kansai pass calculator</h1>
+  <p class="lead">Plan your days in Osaka, Kyoto, Nara, Kobe and Himeji. We price every option with single tickets, the WEST QR Kansai Area Pass, the JR West QR 2day Pass and Kintetsu passes, and show the cheapest mix.</p>
+  <p class="hint">Prices checked on <span id="checked"></span> against official operator pages. Sources are listed at the bottom.</p>
+</header>
+
+<div class="calc">
+  <form class="panel" id="form" aria-label="Your trip" onsubmit="return false">
+    <div class="field">
+      <span class="legend" id="base-l">Where are you staying?</span>
+      <div class="seg" role="group" aria-labelledby="base-l">
+        <button type="button" data-base="osaka" aria-pressed="true">Osaka</button>
+        <button type="button" data-base="kyoto" aria-pressed="false">Kyoto</button>
+      </div>
+    </div>
+    <div class="row2">
+      <div class="field"><label for="start">First day</label><input type="date" id="start"></div>
+      <div class="field"><label for="ndays">Days in Kansai</label>
+        <select id="ndays"><option>1</option><option>2</option><option>3</option><option selected>4</option><option>5</option><option>6</option><option>7</option></select></div>
+    </div>
+    <div class="field"><span class="legend">What will you do each day?</span><div class="days" id="days"></div></div>
+    <div class="checks">
+      <label><input type="checkbox" id="arrive" checked> I arrive at Kansai Airport (KIX) on day 1</label>
+      <label><input type="checkbox" id="depart" checked> I fly out of Kansai Airport on the last day</label>
+      <label><input type="checkbox" id="fast" checked> Use the fast HARUKA train for Kyoto ↔ airport (not the cheaper, slower route with a change)</label>
+      <label><input type="checkbox" id="visitor" checked> I'm entering Japan as a tourist on a foreign passport (needed for visitor-only passes)</label>
+    </div>
+    <details>
+      <summary class="hint">Adjust city rides (default: 4 rides a day)</summary>
+      <div class="row2" style="margin-top:10px">
+        <div class="field"><label for="osaka-n">Osaka Metro rides per Osaka day</label><input type="number" id="osaka-n" min="0" max="12" value="4"></div>
+        <div class="field"><label for="kyoto-n">Kyoto bus rides per Kyoto day</label><input type="number" id="kyoto-n" min="0" max="12" value="4"></div>
+      </div>
+    </details>
+  </form>
+
+  <section class="stack" aria-live="polite" id="out" style="gap:14px;min-width:0"></section>
+</div>
+
+<section class="section" aria-labelledby="chg-h">
+  <h2 id="chg-h">What changed recently</h2>
+  <p>Older guides are often out of date. These changes affect what you should buy.</p>
+  <ul class="changes" id="changes"></ul>
+</section>
+
+<section class="section" aria-labelledby="as-h">
+  <h2 id="as-h">How the calculator works</h2>
+  <div class="prose">
+    <ul>
+      <li>For each day we take the cheapest way to make each journey, then try every start day and length for each pass, and keep the cheapest total.</li>
+      <li>Day trips are counted as a return journey from your hotel city. We assume you can reach either the JR or the private-railway station without an extra fare. If you can't, add a Metro ride.</li>
+      <li>Osaka city days use Osaka Metro (¥190–390 a ride; we use ¥240 unless you change it). Kyoto city days use the ¥230 city bus. We compare these with the Enjoy Eco Card (¥820 weekdays, ¥620 weekends and holidays) and the Kyoto Subway &amp; Bus 1-Day Pass (¥1,100). We count Saturdays and Sundays as weekends; national holidays are not included.</li>
+      <li>Not included: Shinkansen, limited-express surcharges other than HARUKA, attraction passes such as the Osaka Amazing Pass, and child fares.</li>
+      <li>Passes marked "visitor only" require a foreign passport and Temporary Visitor entry status.</li>
+    </ul>
+  </div>
+</section>
+
+<section class="section" aria-labelledby="src-h">
+  <h2 id="src-h">Sources</h2>
+  <p class="hint">"Official page" means we read the number on the operator's own website. "Cross-checked" means we couldn't open the operator's page from our tools, and the number matched JR West's official fare comparison sheet or a fare search service. We re-check both kinds monthly.</p>
+  <div class="table-wrap"><table><thead><tr><th>Item</th><th>Price</th><th>Status</th></tr></thead><tbody id="sources"></tbody></table></div>
+</section>
+
+<script src="../assets/kansai-data.js"></script>
+<script src="../assets/kansai-calc.js"></script>
+<script>
+(function(){
+  var D=window.KANSAI, C=window.KansaiCalc, state={base:"osaka"};
+  var $=function(id){return document.getElementById(id)};
+  function yen(n){return "¥"+n.toLocaleString("en-US")}
+  function el(t,c,x){var e=document.createElement(t);if(c)e.className=c;if(x!=null)e.textContent=x;return e}
+  function link(href,text){var a=el("a",null,text);a.href=href;a.target="_blank";a.rel="noopener";return a}
+  $("checked").textContent=new Date(D.checked+"T00:00:00").toLocaleDateString("en-GB",{day:"numeric",month:"long",year:"numeric"});
+
+  var t=new Date();t.setDate(t.getDate()+14);
+  $("start").value=t.toISOString().slice(0,10);
+
+  var defaults={osaka:["osaka_city","kyoto_trip","nara_trip","himeji_trip","kobe_trip","osaka_city","osaka_city"],
+                kyoto:["kyoto_city","inari_arashi","nara_trip","osaka_trip","kyoto_city","kyoto_city","kyoto_city"]};
+  var chosen={osaka:defaults.osaka.slice(),kyoto:defaults.kyoto.slice()};
+
+  function dayDate(i){var v=$("start").value;if(!v)return null;var d=new Date(v+"T00:00:00");d.setDate(d.getDate()+i);return d}
+  function renderDays(){
+    var box=$("days"),n=+$("ndays").value,acts=C.ACTIVITIES[state.base];box.textContent="";
+    for(var i=0;i<n;i++){
+      var row=el("div","day"),lab=el("label");lab.htmlFor="d"+i;
+      var dd=dayDate(i);lab.append(el("b",null,"Day "+(i+1)));
+      if(dd)lab.append(el("small",null,dd.toLocaleDateString("en-GB",{weekday:"short",day:"numeric",month:"short"})));
+      var s=el("select");s.id="d"+i;
+      Object.keys(acts).forEach(function(k){var o=el("option",null,acts[k].label);o.value=k;s.append(o)});
+      s.value=chosen[state.base][i]||"rest";
+      (function(ix){s.onchange=function(){chosen[state.base][ix]=this.value;calc()}})(i);
+      row.append(lab,s);box.append(row);
+    }
+  }
+  function trip(){
+    var n=+$("ndays").value,days=[];
+    for(var i=0;i<n;i++){var dd=dayDate(i);days.push({activity:chosen[state.base][i]||"rest",weekend:dd?(dd.getDay()===0||dd.getDay()===6):false})}
+    return {base:state.base,days:days,arrive:$("arrive").checked,depart:$("depart").checked,fastAirport:$("fast").checked,visitor:$("visitor").checked,
+      rides:{osaka:Math.max(0,Math.min(12,+$("osaka-n").value||0)),kyoto:Math.max(0,Math.min(12,+$("kyoto-n").value||0))}};
+  }
+  function planName(plan){
+    if(!plan.length)return "No pass: pay as you go with an IC card (ICOCA)";
+    return plan.map(function(p){return D.passes[p.id].name+(p.id==="kansai_area"?" ("+p.len+"-day)":"")+", from day "+(p.start+1)}).join(" + ");
+  }
+  function calc(){
+    var tr=trip(),r=C.solve(tr,D),out=$("out"),best=r.best,none=r.families.none;out.textContent="";
+    var v=el("div","panel verdict");
+    v.append(el("span","hint","Cheapest for your plan"),el("div","big",planName(best.plan)));
+    var p=el("p");p.append("Total transport: ");p.append(el("strong","num",yen(best.total)));
+    if(best.plan.length&&none.total>best.total){p.append(" — ");p.append(el("span","save","saves "+yen(none.total-best.total)+" vs. paying as you go"))}
+    else if(!best.plan.length){p.append(". No pass beats single tickets for this plan.")}
+    v.append(p);out.append(v);
+
+    var cmp=el("div","table-wrap"),tb=el("table"),th=el("thead"),hr=el("tr");["Option","Total"].forEach(function(h){hr.append(el("th",null,h))});th.append(hr);tb.append(th);
+    var body=el("tbody");
+    [["none","IC card only (no pass)"],["kansai_area","Best plan with WEST QR Kansai Area Pass"],["jr_2day","Best plan with JR West QR 2day Pass"],["kintetsu","Best plan with a Kintetsu Rail Pass"]].forEach(function(f){
+      var x=r.families[f[0]],tr2=el("tr");if(x===best)tr2.className="best";
+      var name=el("td");name.append(f[1]);
+      if(!x){var why=f[0]==="jr_2day"?" (needs at least 2 days)":" (visitor-only pass)";name.append(el("div","hint","Not available"+why))}
+      else if(x.plan.length)name.append(el("div","hint",planName(x.plan)));
+      tr2.append(name,el("td","y",x?yen(x.total):"—"));body.append(tr2);
+    });
+    tb.append(body);cmp.append(tb);out.append(cmp);
+
+    var det=el("div","panel");det.append(el("h3",null,"Your cheapest plan, day by day"));
+    best.plan.forEach(function(pp){
+      var P=D.passes[pp.id],c=el("div","passcard");
+      c.append(el("strong",null,P.name+" — "+yen(pp.price)+(P.visitorOnly?" · visitor only":"")));
+      c.append(el("span",null,"Covers: "+P.covers),el("span","hint","Not covered: "+P.excludes),el("span","hint","How to buy: "+P.buy));
+      var s=el("span","hint");s.append(link(P.src,"Official page"));c.append(s);det.append(c);
+    });
+    best.days.forEach(function(d,i){
+      var b=el("div","daybox"),dd=dayDate(i);
+      b.append(el("h4",null,"Day "+(i+1)+(dd?" · "+dd.toLocaleDateString("en-GB",{weekday:"short",day:"numeric",month:"short"}):"")+" — "+yen(d.cost)));
+      if(!d.items.length)b.append(el("span","hint","No fares counted."));
+      d.items.forEach(function(it){var l=el("div","line");l.append(el("span",null,it.label));
+        l.append(it.coveredBy?el("span","covered","covered by pass"):el("span","num",yen(it.cost)));b.append(l)});
+      det.append(b);
+    });
+    out.append(det);
+  }
+
+  D.changes.forEach(function(c){var li=el("li");li.append(el("b",null,c.date+": "));li.append(c.text+" ");li.append(link(c.src,"Source"));$("changes").append(li)});
+  var rows=[];
+  Object.keys(D.passes).forEach(function(k){var P=D.passes[k];var pr=Object.keys(P.prices).map(function(x){return (isNaN(+x)?x:x+"-day")+" "+yen(P.prices[x])}).join(", ");rows.push([P.name,pr,P.status,P.src])});
+  Object.keys(D.fares).forEach(function(k){var F=D.fares[k];rows.push([F.label+(F.note?" — "+F.note:""),yen(F.yen),F.status,F.src])});
+  Object.keys(D.cityRide).forEach(function(k){var F=D.cityRide[k];rows.push([F.label+" — "+F.note,yen(F.yen),"verified",F.src])});
+  rows.forEach(function(r){var tr=el("tr"),a=el("td");a.append(link(r[3],r[0]));tr.append(a,el("td","y",r[1]));var s=el("td");s.append(el("span","st "+r[2],r[2]==="verified"?"Official page":"Cross-checked"));tr.append(s);$("sources").append(tr)});
+
+  document.querySelectorAll("[data-base]").forEach(function(b){b.onclick=function(){state.base=b.dataset.base;document.querySelectorAll("[data-base]").forEach(function(x){x.setAttribute("aria-pressed",x===b)});renderDays();calc()}});
+  ["ndays","start"].forEach(function(id){$(id).addEventListener("change",function(){renderDays();calc()})});
+  ["arrive","depart","fast","visitor","osaka-n","kyoto-n"].forEach(function(id){$(id).addEventListener("change",calc)});
+  renderDays();calc();
+})();
+</script>
