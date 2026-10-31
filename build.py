@@ -8,6 +8,8 @@ from pathlib import Path
 
 ROOT = Path(__file__).parent
 SITE = "FareWise Japan"
+# Public base URL. Change this one line when the custom domain is set up.
+BASE_URL = "https://ss2d5sgg-tech.github.io/site/"
 
 HEAD = """<!doctype html>
 <html lang="en">
@@ -16,6 +18,7 @@ HEAD = """<!doctype html>
 <meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
 <title>{title}</title>
 <meta name="description" content="{description}">
+<link rel="canonical" href="{canonical}">
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Barlow:wght@400;500;600&family=Barlow+Semi+Condensed:wght@600;700&family=IBM+Plex+Mono:wght@400;500&family=Noto+Sans+JP:wght@400;500&display=swap">
@@ -49,6 +52,7 @@ FOOT = """</div></main>
 
 
 def build():
+    urls = []
     for src in sorted((ROOT / "pages").rglob("*.html")):
         text = src.read_text(encoding="utf-8")
         m = re.match(r"<!--\s*title:(.*?)\|\s*description:(.*?)\|\s*path:(.*?)-->\n", text)
@@ -60,12 +64,25 @@ def build():
         base = "../" * depth
         out = ROOT / path
         out.parent.mkdir(parents=True, exist_ok=True)
+        canonical = BASE_URL + ("" if path == "index.html" else path)
+        if path != "404.html":
+            urls.append(canonical)
         full_title = title if title.endswith(SITE) else f"{title} | {SITE}"
         out.write_text(
-            HEAD.format(title=full_title, description=desc, base=base) + body + FOOT.format(base=base),
+            HEAD.format(title=full_title, description=desc, base=base, canonical=canonical) + body + FOOT.format(base=base),
             encoding="utf-8",
         )
         print("built", path)
+    sm = ['<?xml version="1.0" encoding="UTF-8"?>',
+          '<urlset xmlns="http://www.sitemaps.org/schemas/sitemap/0.9">']
+    sm += [f"  <url><loc>{u}</loc></url>" for u in urls]
+    sm.append("</urlset>")
+    (ROOT / "sitemap.xml").write_text("\n".join(sm) + "\n", encoding="utf-8")
+    # Source fragments in pages/ are not real pages; keep them out of search.
+    (ROOT / "robots.txt").write_text(
+        "User-agent: *\nAllow: /\nDisallow: /pages/\nDisallow: /build.py\n\n"
+        f"Sitemap: {BASE_URL}sitemap.xml\n", encoding="utf-8")
+    print("built sitemap.xml, robots.txt")
 
 
 if __name__ == "__main__":
