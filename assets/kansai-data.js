@@ -3,7 +3,7 @@
    official page; "crosschecked" = operator page could not be reached, number matched across
    JR West's official comparison sheet and/or a fare search service. */
 window.KANSAI = {
-  checked: "2026-10-31",
+  checked: "2026-11-01",
   passes: {
     kansai_area: {
       name: "WEST QR Kansai Area Pass", operator: "JR West", visitorOnly: true,
@@ -17,7 +17,8 @@ window.KANSAI = {
       name: "JR West QR 2day Pass", operator: "JR West", visitorOnly: false,
       prices: { 2: 4000 },
       covers: "JR West ordinary trains in the wider Kansai area (Himeji to Nagahama, Nara and Wakayama areas).",
-      excludes: "Limited expresses including HARUKA, Shinkansen. We do not count Kansai Airport as covered, because JR West's notice does not list it clearly.",
+      excludes: "Limited expresses including HARUKA, Shinkansen. Ordinary trains to and from Kansai Airport ARE covered (JR West lists the Kansai Airport Line, whole line, in the free area).",
+      coverageSrc: "https://www.jr-odekake.net/ticket/tokutoku/jrwest_qr2days/",
       buy: "In the KANSAI MaaS app (Japanese). Open to anyone, not only visitors. Valid for use 1 Apr 2026 to 31 Mar 2027.",
       src: "https://www.westjr.co.jp/press/article/items/260225_00_press_JRWESTQR2daypass_1.pdf", status: "verified"
     },
@@ -50,13 +51,13 @@ window.KANSAI = {
   },
   /* Single fares, adult, yen. pass keys list which passes cover that option. */
   fares: {
-    kix_osaka_jr:   { label: "JR Kansai Airport Rapid, KIX ↔ Osaka", yen: 1180, passes: ["kansai_area"], status: "crosschecked", src: "https://www.westjr.co.jp/company/ir/library/fact/pdf/2025/fact09.pdf" },
+    kix_osaka_jr:   { label: "JR Kansai Airport Rapid, KIX ↔ Osaka", yen: 1180, passes: ["kansai_area", "jr_2day"], status: "crosschecked", src: "https://www.westjr.co.jp/company/ir/library/fact/pdf/2025/fact09.pdf" },
     kix_namba_nk:   { label: "Nankai Airport Express, KIX ↔ Namba", yen: 970, passes: [], status: "crosschecked", src: "https://www.westjr.co.jp/company/ir/library/fact/pdf/2025/fact09.pdf" },
     kix_kyoto_honeway: { label: "HARUKA One-way Ticket (visitors), KIX → Kyoto", yen: 2700, passes: ["kansai_area"], visitorOnly: true, status: "verified", src: "https://www.westjr.co.jp/travel-information/en/tickets-passes/oneway/haruka/", note: "Price for tickets bought from 1 Nov 2026 (was 2,200)." },
     kix_kyoto_haruka: { label: "HARUKA regular non-reserved, KIX → Kyoto", yen: 3060, passes: ["kansai_area"], status: "crosschecked", src: "https://ekitan.com/transit/fare/sf-5130/st-5198" },
     kyoto_kix_haruka: { label: "HARUKA regular non-reserved, Kyoto → KIX", yen: 3060, passes: ["kansai_area"], status: "crosschecked", src: "https://ekitan.com/transit/fare/sf-5130/st-5198" },
-    kyoto_kix_rapid: { label: "JR without HARUKA (change at Osaka), Kyoto → KIX", yen: 1860, passes: ["kansai_area"], status: "crosschecked", src: "https://ekitan.com/transit/fare/sf-5130/st-5198", note: "Base fare without the HARUKA charge. Slower (about 1h45) and needs a change." },
-    kix_kyoto_rapid: { label: "JR without HARUKA (change at Osaka), KIX → Kyoto", yen: 1860, passes: ["kansai_area"], status: "crosschecked", src: "https://ekitan.com/transit/fare/sf-5130/st-5198", note: "Base fare without the HARUKA charge. Slower (about 1h45) and needs a change." },
+    kyoto_kix_rapid: { label: "JR without HARUKA (change at Osaka), Kyoto → KIX", yen: 1860, passes: ["kansai_area", "jr_2day"], status: "crosschecked", src: "https://ekitan.com/transit/fare/sf-5130/st-5198", note: "Base fare without the HARUKA charge. Slower (about 1h45) and needs a change." },
+    kix_kyoto_rapid: { label: "JR without HARUKA (change at Osaka), KIX → Kyoto", yen: 1860, passes: ["kansai_area", "jr_2day"], status: "crosschecked", src: "https://ekitan.com/transit/fare/sf-5130/st-5198", note: "Base fare without the HARUKA charge. Slower (about 1h45) and needs a change." },
     osaka_kyoto_jr: { label: "JR Special Rapid, Osaka ↔ Kyoto", yen: 580, passes: ["kansai_area", "jr_2day"], status: "verified", src: "https://www.westjr.co.jp/company/ir/library/fact/pdf/2025/fact09.pdf" },
     umeda_kawaramachi_hk: { label: "Hankyu, Osaka-umeda ↔ Kyoto-kawaramachi", yen: 410, passes: [], status: "crosschecked", src: "https://ekitan.com/rail-company/593/fare/sf-4958/st-5128" },
     osaka_nara_jr:  { label: "JR, Osaka ↔ Nara", yen: 840, passes: ["kansai_area", "jr_2day"], status: "crosschecked", src: "https://ekitan.com/transit/fare/sf-5006/st-5720" },
